@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello OfferController!{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+
+        <div class="mb-5 pb-3 border-bottom">
+            <h2 class="display-5 fw-bold mb-3">{{ offer.title }}</h2>
+            <h3 class="h5 text-muted mb-2">Description</h3>
+            <p class="lead">{{ offer.description }}</p>
+        </div>
+
+        <h3 class="mb-4">Candidatures</h3>
+
+        <div class="row g-4">
+            {% for candidacy in offer.candidacies %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h4 class="card-title h6 text-primary mb-3">
+                                {{ candidacy.user.email }}
+                            </h4>
+                            <p class="card-text text-secondary mb-4">
+                                {{ candidacy.message }}
+                            </p>
+                            <a href="{{ path('single_candidacy', {'id': candidacy.id}) }}" class="btn btn-outline-primary btn-sm mt-auto">
+                                Voir le détail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        Aucune candidature pour le moment.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    <a class="btn btn-link" href="{{ path('offers') }}">Retour à la liste des offres</a>
+    </div>
+{% endblock %}

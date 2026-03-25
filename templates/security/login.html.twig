@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 p-md-5">
+
+                        <h1 class="h3 mb-4 text-center font-weight-normal">Se connecter</h1>
+
+                        <form method="post">
+                            {# Gestion des erreurs de connexion #}
+                            {% if error %}
+                                <div class="alert alert-danger rounded-3">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                            {% endif %}
+
+                            {# Message si l'utilisateur est déjà connecté #}
+                            {% if app.user %}
+                                <div class="alert alert-info mb-4">
+                                    Vous êtes connecté en tant que <strong>{{ app.user.userIdentifier }}</strong>.
+                                    <a href="{{ logout_path() }}" class="alert-link">Me déconnecter</a>
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Adresse Email</label>
+                                <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control form-control-lg" autocomplete="email" required autofocus>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Mot de passe</label>
+                                <input type="password" name="_password" id="password" class="form-control form-control-lg" autocomplete="current-password" required>
+                            </div>
+
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                            {# Option "Se souvenir de moi" (décommenter si configuré dans security.yaml) #}
+                            {#
+                            <div class="form-check mb-4">
+                                <input type="checkbox" name="_remember_me" id="_remember_me" class="form-check-input">
+                                <label for="_remember_me" class="form-check-label">Se souvenir de moi</label>
+                            </div>
+                            #}
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-lg btn-primary" type="submit">
+                                    Connexion
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="mt-4 text-center">
+                            <p class="text-muted mb-0">Pas encore de compte ? <a href="{{ path('app_register') }}" class="text-decoration-none">S'inscrire</a></p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
