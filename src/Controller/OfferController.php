@@ -50,14 +50,8 @@ final class OfferController extends AbstractController
 
     #[Route('/edit-offer/{id}', name: 'edit_offer')]
     #[IsGranted("ROLE_ADMIN")]
-    public function editOffer(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function editOffer(Request $request, EntityManagerInterface $entityManager, Offer $offer): Response
     {
-        $offer = $entityManager->getRepository(Offer::class)->find($id);
-
-        if (!$offer) {
-            return $this->redirectToRoute('offers');
-        }
-
         $form = $this->createForm(OfferType::class, $offer);
         $form->handleRequest($request);
 
@@ -79,14 +73,8 @@ final class OfferController extends AbstractController
 
     #[Route('/deleteOffer/{id}', name: 'delete_offer')]
     #[IsGranted("ROLE_ADMIN")]
-    public function deleteOffer(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function deleteOffer(Request $request, EntityManagerInterface $entityManager, Offer $offer): Response
     {
-        $offer = $entityManager->getRepository(Offer::class)->find($id);
-
-        if (!$offer) {
-            return $this->redirectToRoute('offers');
-        }
-
         $entityManager->remove($offer);
         $entityManager->flush();
 
@@ -94,14 +82,8 @@ final class OfferController extends AbstractController
     }
 
     #[Route('/offer/{id}', name: 'single_offer')]
-    public function singleOffer(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function singleOffer(Request $request, EntityManagerInterface $entityManager, Offer $offer): Response
     {
-        $offer = $entityManager->getRepository(Offer::class)->find($id);
-
-        if (!$offer) {
-            return $this->redirectToRoute('offers');
-        }
-
         return $this->render('offer/single.html.twig', [
             'offer' => $offer,
         ]);

@@ -4,9 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Candidacy;
 use App\Form\CandidacyType;
+use App\Service\FileUpload;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Workflow\Exception\LogicException;
+use Symfony\Component\Workflow\WorkflowInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormEvent;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,8 +35,8 @@ final class CandidacyController extends AbstractController
     public function addCandidacy(
         Request $request,
         EntityManagerInterface $entityManager,
-        #[Autowire('%kernel.project_dir%/public/uploads')] string $uploadsDirectory,
-        SluggerInterface $slugger
+        WorkflowInterface $candidacyReviewStateMachine,
+        FileUpload $fileUpload
     ): Response
     {
         $candidacy = new Candidacy();
@@ -42,21 +46,15 @@ final class CandidacyController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $uploadedFile = $form->get('file')->getData();
 
-            $originalFilename = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename.'-'.uniqid().'.'.$uploadedFile->guessExtension();
-
-            try {
-                $uploadedFile->move($uploadsDirectory, $newFilename);
-            } catch (FileException $e) {
-                throw new FileException($e);
-            }
+            $newFilename = $fileUpload->upload($uploadedFile);
 
             $candidacy->setFile($newFilename);
 
             $user = $this->getUser();
 
             $candidacy->setUser($user);
+
+            $candidacyReviewStateMachine->getMarking($candidacy);
 
             $entityManager->persist($candidacy);
             $entityManager->flush();
@@ -71,14 +69,8 @@ final class CandidacyController extends AbstractController
 
     #[Route('/edit-candidacy/{id}', name: 'edit_candidacy')]
     #[IsGranted("ROLE_USER")]
-    public function editCandidacy(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function editCandidacy(Request $request, EntityManagerInterface $entityManager, Candidacy $candidacy): Response
     {
-        $candidacy = $entityManager->getRepository(Candidacy::class)->find($id);
-
-        if (!$candidacy) {
-            return $this->redirectToRoute('candidacies');
-        }
-
         $form = $this->createForm(CandidacyType::class, $candidacy);
         $form->handleRequest($request);
 
@@ -96,14 +88,8 @@ final class CandidacyController extends AbstractController
 
     #[Route('/deleteCandidacy/{id}', name: 'delete_candidacy')]
     #[IsGranted("ROLE_ADMIN")]
-    public function deleteCandidacy(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function deleteCandidacy(Request $request, EntityManagerInterface $entityManager, Candidacy $candidacy): Response
     {
-        $candidacy = $entityManager->getRepository(Candidacy::class)->find($id);
-
-        if (!$candidacy) {
-            return $this->redirectToRoute('candidacies');
-        }
-
         $entityManager->remove($candidacy);
         $entityManager->flush();
 
@@ -111,12 +97,15 @@ final class CandidacyController extends AbstractController
     }
 
     #[Route('/candidacy/{id}', name: 'single_candidacy')]
-    public function singleCandidacy(EntityManagerInterface $entityManager, $id): Response
+    public function singleCandidacy(EntityManagerInterface $entityManager, Candidacy $candidacy, WorkflowInterface $candidacyReviewStateMachine
+    ): Response
     {
-        $candidacy = $entityManager->getRepository(Candidacy::class)->find($id);
 
-        if (!$candidacy) {
-            return $this->redirectToRoute('candidacies');
+        try {
+            $candidacyReviewStateMachine->apply($candidacy, 'to_review');
+            $entityManager->flush();
+        } catch (LogicException $e) {
+            throw $e;
         }
 
         return $this->render('candidacy/single.html.twig', [

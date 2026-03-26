@@ -20,7 +20,7 @@
 
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h2 class="card-title h5 text-dark mb-0">
-                                    {{ offer.title }}
+                                    <a href="{{ path('single_offer', {'id': offer.id}) }}">{{ offer.title }}</a>
                                 </h2>
                                 <span class="badge bg-light text-secondary border">
                                 {{ offer.createdAt|date('d/m/Y H:i') }}

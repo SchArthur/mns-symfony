@@ -45,6 +45,10 @@ class Candidacy
     #[Groups(['candidacies:read'])]
     private ?Offer $offer = null;
 
+    #[ORM\Column(length: 255)]
+    #[Groups(['candidacies:read'])]
+    private ?string $status = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -118,6 +122,18 @@ class Candidacy
     public function setOffer(?Offer $offer): static
     {
         $this->offer = $offer;
+
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
 
         return $this;
     }

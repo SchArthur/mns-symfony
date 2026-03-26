@@ -1,0 +1,27 @@
+framework:
+    workflows:
+        candidacy_review:
+            type: 'state_machine' # or 'state_machine'
+            audit_trail:
+                enabled: true
+            marking_store:
+                type: 'method'
+                property: 'status'
+            supports:
+                - App\Entity\Candidacy
+            initial_marking: pending
+            places: # defining places manually is optional
+                - pending
+                - reviewed
+                - rejected
+                - accepted
+            transitions:
+                to_review:
+                    from: pending
+                    to: reviewed
+                accept:
+                    from: reviewed
+                    to: accepted
+                reject:
+                    from: reviewed
+                    to: rejected
